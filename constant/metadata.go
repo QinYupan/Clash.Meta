@@ -25,6 +25,7 @@ const (
 	SOCKS5
 	SHADOWSOCKS
 	VMESS
+	VLESS
 	REDIR
 	TPROXY
 	TUNNEL
@@ -69,6 +70,8 @@ func (t Type) String() string {
 		return "ShadowSocks"
 	case VMESS:
 		return "Vmess"
+	case VLESS:
+		return "Vless"
 	case REDIR:
 		return "Redir"
 	case TPROXY:
@@ -103,6 +106,8 @@ func ParseType(t string) (*Type, error) {
 		res = SHADOWSOCKS
 	case "VMESS":
 		res = VMESS
+	case "VLESS":
+		res = VLESS
 	case "REDIR":
 		res = REDIR
 	case "TPROXY":
@@ -133,7 +138,9 @@ type Metadata struct {
 	Type         Type       `json:"type"`
 	SrcIP        netip.Addr `json:"sourceIP"`
 	DstIP        netip.Addr `json:"destinationIP"`
+	SrcGeoIP     []string   `json:"sourceGeoIP"`      // can be nil if never queried, empty slice if got no result
 	DstGeoIP     []string   `json:"destinationGeoIP"` // can be nil if never queried, empty slice if got no result
+	SrcIPASN     string     `json:"sourceIPASN"`
 	DstIPASN     string     `json:"destinationIPASN"`
 	SrcPort      uint16     `json:"sourcePort,string"`      // `,string` is used to compatible with old version json output
 	DstPort      uint16     `json:"destinationPort,string"` // `,string` is used to compatible with old version json output
@@ -299,4 +306,11 @@ func (m *Metadata) SetRemoteAddress(rawAddress string) error {
 	m.DstPort = uint16Port
 
 	return nil
+}
+
+func (m *Metadata) SwapSrcDst() {
+	m.SrcIP, m.DstIP = m.DstIP, m.SrcIP
+	m.SrcPort, m.DstPort = m.DstPort, m.SrcPort
+	m.SrcIPASN, m.DstIPASN = m.DstIPASN, m.SrcIPASN
+	m.SrcGeoIP, m.DstGeoIP = m.DstGeoIP, m.SrcGeoIP
 }
